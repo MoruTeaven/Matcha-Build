@@ -50,11 +50,26 @@ export default {
     for (const bundle of target.bundle ?? []) args.push('--bundles', bundle);
 
     log.step('tauri build（Rust 编译较慢）');
-    await run(process.execPath, [cli, ...args], {
-      cwd: target.dirAbs,
-      env: { ...process.env },
-      maxBuffer: 64 * 1024 * 1024,
-    });
+    try {
+      await run(process.execPath, [cli, ...args], {
+        cwd: target.dirAbs,
+        env: { ...process.env },
+        maxBuffer: 64 * 1024 * 1024,
+      });
+    } catch (error) {
+      const detail = [error.stdout, error.stderr]
+        .map((chunk) =>
+          String(chunk ?? '')
+            .replace(/\u001b\[[0-9;]*[A-Za-z]/g, '')
+            .split(/\r?\n/)
+            .filter((line) => line.trim())
+            .slice(-40)
+            .join('\n'),
+        )
+        .filter(Boolean)
+        .join('\n');
+      throw new Error(`tauri build 失败：\n${detail || error.message}`);
+    }
     return { ...front, runner: 'tauri', bundleDir };
   },
 

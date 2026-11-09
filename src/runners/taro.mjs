@@ -8,6 +8,17 @@ import { log } from '../utils/log.mjs';
 
 const run = promisify(execFile);
 
+/** 子进程失败时，stderr 才是真正的现场；只取尾部若干行，避免刷屏 */
+function tailOf(stderr, lines = 40) {
+  if (!stderr) return '';
+  return String(stderr)
+    .replace(/\u001b\[[0-9;]*[A-Za-z]/g, '')
+    .split(/\r?\n/)
+    .filter((line) => line.trim() && !/UNDICI-EHPA|trace-warnings/.test(line))
+    .slice(-lines)
+    .join('\n');
+}
+
 function resolveTaroCli(clientDir) {
   const require = createRequire(path.join(clientDir, 'package.json'));
   try {
@@ -63,11 +74,21 @@ export default {
       const clientDist = path.join(target.dirAbs, 'dist');
       await removeDir(clientDist);
       log.step(`taro build --type ${platform}`);
-      await run(process.execPath, [cli, 'build', '--type', platform], {
-        cwd: target.dirAbs,
-        env: { ...process.env, NODE_ENV: 'production' },
-        maxBuffer: 64 * 1024 * 1024,
-      });
+      try {
+        await run(process.execPath, [cli, 'build', '--type', platform], {
+          cwd: target.dirAbs,
+          env: {
+            ...process.env,
+            NODE_ENV: 'production',
+            MATCHA_APP_VERSION: ctx.config.version,
+          },
+          maxBuffer: 64 * 1024 * 1024,
+        });
+      } catch (error) {
+        // taro 的编译详情走 stdout，退出信息走 stderr，两边都要看
+        const detail = tailOf(error.stdout) || tailOf(error.stderr);
+        throw new Error(`taro build --type ${platform} 失败：\n${detail || error.message}`);
+      }
 
       const produced = locateOutput(target.dirAbs, platform);
       if (!produced) {
