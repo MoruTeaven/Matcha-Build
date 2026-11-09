@@ -1,0 +1,38 @@
+{
+  "name": "@moruteaven/matcha",
+  "version": "0.1.0-dev.1",
+  "description": "配置驱动的多端构建编排器：一条命令构建 web / uTools / ZTools / tauri / taro",
+  "type": "module",
+  "bin": {
+    "matcha": "./bin/matcha.mjs"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "bin",
+    "src"
+  ],
+  "engines": {
+    "node": ">=20.10"
+  },
+  "dependencies": {
+    "cac": "^6.7.14",
+    "jiti": "^2.4.2",
+    "picocolors": "^1.1.1",
+    "tinyglobby": "^0.2.10",
+    "zod": "^3.24.1"
+  },
+  "peerDependencies": {
+    "vite": ">=5"
+  },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": true
+    }
+  }
+}
