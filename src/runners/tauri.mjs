@@ -34,7 +34,7 @@ export default {
   },
 
   async build(target, ctx) {
-    // 1) 前端产物：复用 vite runner，产物落在 dist/tauri
+    // 1) 前端产物：复用 vite runner，产物落在 target.outDir（如 dist/tauri/desktop）
     const front = await viteRunner.build(target, ctx);
 
     // 2) Rust 打包：缺 CLI 时只交付前端资源，并给出明确提示
