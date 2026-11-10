@@ -1,5 +1,5 @@
 /**
- * @moruteaven/matcha 的公开类型。
+ * @moruteaven/matchabuild 的公开类型。
  * 构建工具本身是纯 ESM JS，这里只声明项目在 build.config.ts 里用到的契约。
  */
 

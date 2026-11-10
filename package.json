@@ -1,7 +1,18 @@
 {
-  "name": "@moruteaven/matcha",
+  "name": "@moruteaven/matchabuild",
   "version": "0.1.0-dev.1",
   "description": "配置驱动的多端构建编排器：一条命令构建 web / uTools / ZTools / tauri / taro",
+  "author": "MoruTeaven <me@MoruTeaven.com>",
+  "license": "MIT",
+  "keywords": [
+    "build-tool",
+    "monorepo",
+    "vite",
+    "taro",
+    "tauri",
+    "utools",
+    "ztools"
+  ],
   "type": "module",
   "bin": {
     "matcha": "./bin/matcha.mjs"
