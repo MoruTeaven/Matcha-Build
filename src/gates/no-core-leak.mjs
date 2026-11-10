@@ -8,7 +8,7 @@ function escapeRegExp(value) {
 
 /**
  * 产物里不应出现 core 的源码痕迹：
- * - 未解析的 `@mocha/core` 导入
+ * - 未解析的 `@moruteaven/mocha-core` 导入
  * - 被重写的 `../core/src/` 路径
  * - 源码里的绝对路径
  */

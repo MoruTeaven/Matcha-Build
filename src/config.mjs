@@ -54,10 +54,10 @@ const configSchema = z.object({
   core: z
     .object({
       root: z.string().default('core/src'),
-      alias: z.string().default('@mocha/core'),
+      alias: z.string().default('@moruteaven/mocha-core'),
       mode: z.enum(['source', 'built']).default('source'),
     })
-    .default(() => ({ root: 'core/src', alias: '@mocha/core', mode: 'source' })),
+    .default(() => ({ root: 'core/src', alias: '@moruteaven/mocha-core', mode: 'source' })),
   outDir: z.string().default('dist'),
   targets: z.record(targetSchema),
   gates: z
