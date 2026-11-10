@@ -2,12 +2,14 @@ import { bomGate } from './bom.mjs';
 import { envLeakGate } from './env-leak.mjs';
 import { manifestIntegrityGate } from './manifest-integrity.mjs';
 import { noCoreLeakGate } from './no-core-leak.mjs';
+import { sharedUiGate } from './shared-ui.mjs';
 
 export const GATES = new Map([
   [bomGate.id, bomGate],
   [envLeakGate.id, envLeakGate],
   [manifestIntegrityGate.id, manifestIntegrityGate],
   [noCoreLeakGate.id, noCoreLeakGate],
+  [sharedUiGate.id, sharedUiGate],
 ]);
 
 export const DEFAULT_GATES = ['manifest-integrity', 'no-core-leak', 'env-leak', 'bom'];
