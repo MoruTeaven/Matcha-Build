@@ -43,6 +43,8 @@ const targetSchema = z.object({
   platforms: z.array(z.string()).optional(),
   bundle: z.array(z.string()).optional(),
   gates: z.array(z.string()).optional(),
+  /** 端内更新日志：默认按端裁剪生成 CHANGELOG.md；false 关闭（包体积敏感端） */
+  changelog: z.boolean().default(true),
   port: z.number().int().positive().optional(),
   /** 可选 target：依赖未就绪时跳过而不是让整个构建失败（渐进接入用） */
   optional: z.boolean().default(false),

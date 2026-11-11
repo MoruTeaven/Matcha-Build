@@ -40,6 +40,8 @@ export interface TargetConfig {
   bundle?: string[];
   /** 覆盖全局门禁列表 */
   gates?: string[];
+  /** 端内更新日志：默认按端裁剪生成 CHANGELOG.md；false 关闭 */
+  changelog?: boolean;
   /** dev server 端口 */
   port?: number;
   /** 可选 target：依赖未就绪时跳过而不是让整个构建失败 */
@@ -131,6 +133,9 @@ export declare function applyManifest(target: ResolvedTarget, ctx?: BuildContext
 
 /** 通用能力：把 target.assets 列出的文件拷到产物根（插件按需调用） */
 export declare function applyAssets(target: ResolvedTarget, ctx: BuildContext): Promise<void>;
+
+/** 通用能力：按端裁剪更新日志，写 dist/<target>/CHANGELOG.md（内核默认步骤，target.changelog=false 可关） */
+export declare function applyChangelog(target: ResolvedTarget, ctx: BuildContext): Promise<void>;
 
 /** 加载并规范化配置；路径解析为绝对路径，target 带 unavailable 标记 */
 export declare function loadConfig(

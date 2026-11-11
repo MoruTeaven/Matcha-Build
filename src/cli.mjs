@@ -10,6 +10,7 @@ import { ConfigError, loadConfig } from './config.mjs';
 import { DEFAULT_GATES, runGates } from './gates/index.mjs';
 import { describePlan, STEPS } from './plan.mjs';
 import { getRunner } from './runner.mjs';
+import { applyChangelog } from './steps/changelog.mjs';
 import { cleanTarget } from './steps/clean.mjs';
 import { summarizeTarget, writeBuildManifest } from './steps/report.mjs';
 import { removeDir, walkFiles } from './utils/fs.mjs';
@@ -69,6 +70,8 @@ async function runBuildForTarget(id, ctx, options) {
 
   // 清单/资产由 runner 插件按需调用（applyManifest / applyAssets 是内核导出的公共能力），
   // 内核不再替某个端隐式执行——保证"官方内核只有 web"的边界。
+  // 更新日志例外：它是全端通用的产物内容（非端专属知识），默认每端裁剪生成，可 target.changelog = false 关闭。
+  await applyChangelog(target, ctx);
 
   const gates = options.gates === false ? [] : await runGates(target, ctx, enabledGates(config));
   printGates(gates);
