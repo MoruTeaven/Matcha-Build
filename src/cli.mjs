@@ -10,9 +10,7 @@ import { ConfigError, loadConfig } from './config.mjs';
 import { DEFAULT_GATES, runGates } from './gates/index.mjs';
 import { describePlan, STEPS } from './plan.mjs';
 import { getRunner } from './runner.mjs';
-import { applyAssets } from './steps/assets.mjs';
 import { cleanTarget } from './steps/clean.mjs';
-import { applyManifest } from './steps/manifest.mjs';
 import { summarizeTarget, writeBuildManifest } from './steps/report.mjs';
 import { removeDir, walkFiles } from './utils/fs.mjs';
 import { banner, log, setTarget } from './utils/log.mjs';
@@ -69,9 +67,8 @@ async function runBuildForTarget(id, ctx, options) {
   await runner.preflight?.(target, ctx);
   const built = await runner.build(target, ctx);
 
-  // 顺序很重要：先让 logo 等资源就位，再校验 platform 清单的内部引用
-  await applyAssets(target, ctx);
-  await applyManifest(target, ctx);
+  // 清单/资产由 runner 插件按需调用（applyManifest / applyAssets 是内核导出的公共能力），
+  // 内核不再替某个端隐式执行——保证"官方内核只有 web"的边界。
 
   const gates = options.gates === false ? [] : await runGates(target, ctx, enabledGates(config));
   printGates(gates);

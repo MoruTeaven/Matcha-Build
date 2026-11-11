@@ -10,8 +10,8 @@
 export type RunnerId = string;
 
 export interface ManifestConfig {
-  /** 平台清单类型；utools / ztools 会走内置校验 */
-  kind?: 'utools' | 'ztools' | 'web' | 'custom';
+  /** 清单类型标记：现在仅作元数据，具体清单逻辑由 runner 插件决定 */
+  kind?: string;
   /** 从客户端目录原样拷贝到产物目录的文件（如 plugin.json、preload.js） */
   copy?: string[];
   /** 在产物目录生成 JSON 文件，如 { 'package.json': { type: 'commonjs' } } */
@@ -125,6 +125,12 @@ export declare function listRunners(): string[];
 export declare class ConfigError extends Error {
   exitCode: number;
 }
+
+/** 通用能力：拷贝平台清单文件、生成 JSON、校验清单引用（插件按需调用） */
+export declare function applyManifest(target: ResolvedTarget, ctx?: BuildContext): Promise<void>;
+
+/** 通用能力：把 target.assets 列出的文件拷到产物根（插件按需调用） */
+export declare function applyAssets(target: ResolvedTarget, ctx: BuildContext): Promise<void>;
 
 /** 加载并规范化配置；路径解析为绝对路径，target 带 unavailable 标记 */
 export declare function loadConfig(

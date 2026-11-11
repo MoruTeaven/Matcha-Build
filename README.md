@@ -8,6 +8,8 @@
 | --- | --- |
 | 微信小程序 / 抖音小程序 / H5 | `@moruteaven/matchabuild-plugin-taro` |
 | 桌面（Tauri 安装包） | `@moruteaven/matchabuild-plugin-tauri` |
+| uTools 插件 | `@moruteaven/matchabuild-plugin-utools` |
+| ZTools 插件 | `@moruteaven/matchabuild-plugin-ztools` |
 
 ## 安装
 

@@ -41,7 +41,7 @@ export function getRunner(id) {
   const runner = REGISTRY.get(id);
   if (!runner) {
     throw new Error(
-      `未知 runner：${id}（内置：${[...REGISTRY.keys()].join(' / ')}）。` +
+      `未知 runner：${id}（可用：${[...REGISTRY.keys()].join(' / ')}）。` +
         `如需 ${id}，请安装 @moruteaven/matchabuild-plugin-${id} 并在 build.config.ts 的 plugins 里注册`,
     );
   }

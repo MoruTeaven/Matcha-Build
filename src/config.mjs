@@ -21,7 +21,8 @@ const CONFIG_FILES = [
 ];
 
 const manifestSchema = z.object({
-  kind: z.enum(['utools', 'ztools', 'web', 'custom']).optional(),
+  /** 清单类型标记：现在仅作元数据（具体清单逻辑由插件决定） */
+  kind: z.string().optional(),
   copy: z.array(z.string()).default([]),
   generate: z.record(z.any()).default({}),
   require: z.array(z.string()).default([]),
