@@ -1,16 +1,13 @@
-import { execFile } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { promisify } from 'node:util';
+import { execa } from 'execa';
 import { hashFiles, walkFiles } from '../utils/fs.mjs';
-
-const run = promisify(execFile);
 
 async function gitInfo(rootDir) {
   try {
     const [{ stdout: commit }, { stdout: status }] = await Promise.all([
-      run('git', ['rev-parse', '--short', 'HEAD'], { cwd: rootDir }),
-      run('git', ['status', '--porcelain'], { cwd: rootDir }),
+      execa('git', ['rev-parse', '--short', 'HEAD'], { cwd: rootDir }),
+      execa('git', ['status', '--porcelain'], { cwd: rootDir }),
     ]);
     return { commit: commit.trim(), dirty: status.trim().length > 0 };
   } catch {

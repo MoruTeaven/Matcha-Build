@@ -1,10 +1,9 @@
-import { execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
-import { promisify } from 'node:util';
 import cac from 'cac';
+import { execa } from 'execa';
 import pc from 'picocolors';
 import { ConfigError, loadConfig } from './config.mjs';
 import { DEFAULT_GATES, runGates } from './gates/index.mjs';
@@ -18,7 +17,6 @@ import { banner, log, setTarget } from './utils/log.mjs';
 
 const require = createRequire(import.meta.url);
 const pkg = require('../package.json');
-const run = promisify(execFile);
 
 function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`;
@@ -228,12 +226,19 @@ async function doctorAction(options) {
     const checks = [];
 
     checks.push(['Node', process.version, true]);
-    try {
-      const pnpmBin = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
-      const { stdout } = await run(pnpmBin, ['--version']);
-      checks.push(['pnpm', stdout.trim(), true]);
-    } catch {
-      checks.push(['pnpm', '未安装', false]);
+
+    // pnpm 自检：pnpm run 的子进程里 PATH 不含 pnpm 自身的 bin 目录，
+    // spawn pnpm 会误报「未安装」；优先读运行时注入的 npm_config_user_agent。
+    const pnpmFromAgent = process.env.npm_config_user_agent?.match(/pnpm\/([\w.-]+)/)?.[1];
+    if (pnpmFromAgent) {
+      checks.push(['pnpm', `v${pnpmFromAgent}`, true]);
+    } else {
+      try {
+        const { stdout } = await execa('pnpm', ['--version']);
+        checks.push(['pnpm', stdout.trim(), true]);
+      } catch {
+        checks.push(['pnpm', '未检测到（PATH 中无 pnpm）', false]);
+      }
     }
 
     try {

@@ -37,6 +37,7 @@
   },
   "dependencies": {
     "cac": "^6.7.14",
+    "execa": "^9.6.1",
     "jiti": "^2.4.2",
     "picocolors": "^1.1.1",
     "tinyglobby": "^0.2.10",
