@@ -7,16 +7,15 @@ import { log } from '../utils/log.mjs';
 /**
  * 更新日志按端裁剪（BUILD-SPEC §7.1）：
  *
- * 源：仓库根 CHANGELOG.md（单一真相源）。
+ * 源：仓库根 CHANGELOG.md（单一真相源，给人看的版本在仓库）。
  * 条目行开头可带端标签，如 `- [web] 修复…`、`- [web,taro] …`；
  * `[全端]` 或不带标签 = 全端可见（老格式零迁移）。
  * 条目可在端标签后带日期前缀：`- [web] (2026-11-11) 内容`（省略 = 版本节日期）。
  * 未知端名直接报错（防拼错静默丢失）。
  *
- * 双产物（同一份解析输出两种格式）：
- * - dist/<target>/CHANGELOG.md —— 给人看（仓库/分发场景），标签剥掉、日期保留；
- * - dist/<target>/changelog.json —— 给软件加载（更新日志页/弹窗），结构化：
- *   { versions: [{ version, date, items: [{ date?, text }] }] }，该端可见条目、端标签已裁剪。
+ * 产物：dist/<target>/changelog.json——给软件加载（更新日志页/弹窗直接渲染），
+ * 只含该端可见条目（端标签已裁剪），日期独立成字段：
+ * { versions: [{ version, date, items: [{ date?, text }] }] }
  */
 
 /** 条目行的端标签：`- [web,taro] 内容` */
@@ -41,15 +40,13 @@ export async function applyChangelog(target, ctx) {
   const raw = await fs.readFile(source, 'utf-8');
   const validTags = new Set([...Object.keys(ctx.config.targets), '全端']);
 
-  const lines = raw.split(/\r?\n/);
-  const kept = [];
   const versions = []; // 结构化产物（changelog.json）
   let current = null;
   let seenVersionHeading = false;
 
-  for (const line of lines) {
+  for (const line of raw.split(/\r?\n/)) {
     if (/^##\s/.test(line)) seenVersionHeading = true;
-    // 版本节之前的引用块（`> `）是写给开发者的格式定义，不进端用户产物
+    // 版本节之前的引用块（`> `）是写给开发者的格式定义，不属于任何版本
     if (!seenVersionHeading && line.startsWith('>')) continue;
 
     // 版本节标题：进入新版本，开始收集结构化条目
@@ -57,20 +54,14 @@ export async function applyChangelog(target, ctx) {
     if (heading) {
       current = { version: heading[1], date: heading[2], items: [] };
       versions.push(current);
-      kept.push(line);
       continue;
     }
 
     // 条目行：带端标签（- [web] …）或不带（- …）都视为条目
     const match = line.match(TAGGED_ITEM);
-    if (!match && !/^\s*-\s+/.test(line)) {
-      kept.push(line); // 正文等非条目行原样保留
-      continue;
-    }
+    if (!match && !/^\s*-\s+/.test(line)) continue; // 正文等非条目行不进产物
 
     // 解析端标签决定可见性（无标签 = 全端）
-    let visible = true;
-    let bare = line;
     if (match) {
       const tags = match[2].split(TAG_SPLIT).filter(Boolean);
       if (tags.length > 0) {
@@ -80,17 +71,13 @@ export async function applyChangelog(target, ctx) {
             `CHANGELOG 条目端标签未知：${unknown.join(' / ')}（可用：${[...validTags].join(' / ')}）\n  ${line.trim()}`,
           );
         }
-        visible = tags.includes('全端') || tags.includes(target.id);
+        const visible = tags.includes('全端') || tags.includes(target.id);
+        if (!visible) continue; // 该端不可见：不进产物
       }
-      bare = line.replace(TAGGED_ITEM, '$1'); // 剥标签
     }
 
-    if (!visible) continue; // 该端不可见：md / json 都不进
-
-    kept.push(bare);
-
     // 结构化：剥掉标签与日期前缀，日期独立成字段
-    const text = bare.replace(/^\s*-\s*/, '');
+    const text = line.replace(TAGGED_ITEM, '$1').replace(/^\s*-\s*/, '');
     const dateMatch = text.match(DATE_PREFIX);
     if (current) {
       current.items.push(
@@ -101,13 +88,8 @@ export async function applyChangelog(target, ctx) {
     }
   }
 
-  await ensureDir(target.outDirAbs);
-
-  const mdFile = path.join(target.outDirAbs, 'CHANGELOG.md');
-  await fs.writeFile(mdFile, `${kept.join('\n').trimEnd()}\n`, 'utf-8');
-
   const jsonFile = path.join(target.outDirAbs, 'changelog.json');
+  await ensureDir(target.outDirAbs);
   await fs.writeFile(jsonFile, `${JSON.stringify({ versions }, null, 2)}\n`, 'utf-8');
-
-  log.dim('  + CHANGELOG.md / changelog.json（按端裁剪）');
+  log.dim('  + changelog.json（按端裁剪）');
 }
