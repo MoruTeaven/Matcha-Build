@@ -34,7 +34,12 @@ export async function applyChangelog(target, ctx) {
 
   const lines = raw.split(/\r?\n/);
   const kept = [];
+  let seenVersionHeading = false;
   for (const line of lines) {
+    if (/^##\s/.test(line)) seenVersionHeading = true;
+    // 版本节之前的引用块（`> `）是写给开发者的格式定义，不进端用户产物
+    if (!seenVersionHeading && line.startsWith('>')) continue;
+
     const match = line.match(TAGGED_ITEM);
     if (!match) {
       kept.push(line); // 版本标题、日期、正文等原样保留
