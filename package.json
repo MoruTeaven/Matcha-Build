@@ -22,6 +22,10 @@
       "types": "./src/index.d.ts",
       "import": "./src/index.mjs"
     },
+    "./utils": {
+      "types": "./src/utils/index.d.ts",
+      "import": "./src/utils/index.mjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [

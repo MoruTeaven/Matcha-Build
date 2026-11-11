@@ -2,13 +2,22 @@
 
 配置驱动的多端构建编排器：一条命令构建 web / uTools / ZTools / tauri / taro，产物统一输出到 `dist/`。
 
+官方内核只内置 **web（vite）**；其余端通过插件接入：
+
+| 端 | 插件包 |
+| --- | --- |
+| 微信小程序 / 抖音小程序 / H5 | `@moruteaven/matchabuild-plugin-taro` |
+| 桌面（Tauri 安装包） | `@moruteaven/matchabuild-plugin-tauri` |
+
 ## 安装
 
 ```bash
-pnpm add -D @moruteaven/matchabuild
+pnpm add -D @moruteaven/matchabuild          # 内核：web 构建 + 门禁 + 产物契约
+pnpm add -D @moruteaven/matchabuild-plugin-taro   # 按需：小程序
+pnpm add -D @moruteaven/matchabuild-plugin-tauri  # 按需：桌面
 ```
 
-要求 Node >= 20.10。构建 web / tauri / uTools / ZTools 需要 `vite >= 5`（peer，可选）。
+要求 Node >= 20.10。构建 web / uTools / ZTools 需要 `vite >= 5`（peer，可选）。
 
 > **pnpm 11 必读**：pnpm 11 默认拦截依赖的安装脚本，esbuild 装不上会导致 vite 构建失败
 > （`ERR_PNPM_IGNORED_BUILDS`）。在项目根的 `pnpm-workspace.yaml` 里放行：
@@ -24,10 +33,13 @@ pnpm add -D @moruteaven/matchabuild
 
 ```ts
 import { defineBuildConfig } from '@moruteaven/matchabuild';
+import taroPlugin from '@moruteaven/matchabuild-plugin-taro';
 import react from '@vitejs/plugin-react';
 
 export default defineBuildConfig({
   app: { name: 'my-app', displayName: '我的应用' },
+  // runner 插件：未注册的 runner 会报错并提示安装哪个插件包
+  plugins: [taroPlugin],
   outDir: 'dist',
   targets: {
     web: {
@@ -36,6 +48,12 @@ export default defineBuildConfig({
       outDir: 'dist/web',
       base: '/',
       plugins: [react()],
+    },
+    taro: {
+      runner: 'taro',
+      dir: 'clients/taro',
+      outDir: 'dist/taro',
+      platforms: ['weapp', 'tt', 'h5'],
     },
   },
 });

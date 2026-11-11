@@ -3,6 +3,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createJiti } from 'jiti';
 import { z } from 'zod';
+import { registerPlugins } from './runner.mjs';
 
 export class ConfigError extends Error {
   constructor(message) {
@@ -27,7 +28,8 @@ const manifestSchema = z.object({
 });
 
 const targetSchema = z.object({
-  runner: z.enum(['vite', 'taro', 'tauri', 'static']),
+  /** runner 由插件提供（内核只内置 vite / static），合法性在注册表里校验 */
+  runner: z.string(),
   dir: z.string(),
   outDir: z.string(),
   base: z.string().default('/'),
@@ -51,6 +53,8 @@ const configSchema = z.object({
     displayName: z.string().optional(),
     versionFrom: z.string().default('package.json'),
   }),
+  /** runner 插件列表（由 @moruteaven/matchabuild-plugin-* 提供） */
+  plugins: z.array(z.any()).default([]),
   core: z
     .object({
       root: z.string().default('core/src'),
@@ -128,6 +132,7 @@ function normalize(rootDir, configPath, parsed) {
     rootDir,
     configPath,
     app: parsed.app,
+    plugins: parsed.plugins,
     core: {
       ...parsed.core,
       rootAbs: path.resolve(rootDir, parsed.core.root),
@@ -168,5 +173,11 @@ export async function loadConfig(rootDir, options = {}) {
     throw new ConfigError(`build.config 校验失败：\n${formatZodError(parsed.error)}`);
   }
 
-  return normalize(rootDir, configPath, parsed.data);
+  const config = normalize(rootDir, configPath, parsed.data);
+
+  // 所有命令（build / verify / clean / dev / doctor / graph）都经过 loadConfig，
+  // 在这里统一注册 runner 插件，避免各 action 重复注册。
+  registerPlugins(config.plugins);
+
+  return config;
 }
